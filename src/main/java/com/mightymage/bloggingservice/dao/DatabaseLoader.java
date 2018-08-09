@@ -20,5 +20,6 @@ public class DatabaseLoader implements CommandLineRunner {
     public void run(String...strings) throws Exception{
         this.repository.save(new Article("First title of my new blog!", "Hey there! " +
                 "Today you can see my first blogarticle in my first blog in my first blogging service! Let's go dude!"));
+        this.repository.save(new Article("Second for test","Just testing output!"));
     }
 }
