@@ -8,10 +8,12 @@
     "build": "webpack"
   },
   "dependencies": {
-    "webpack": "^4.7.0",
     "react": "^16.4.1",
     "react-dom": "^16.4.1",
-    "rest": "^2.0.0"
+    "rest": "^2.0.0",
+    "save": "^2.3.2",
+    "webpack": "^4.7.0",
+    "when": "^3.7.8"
   },
   "devDependencies": {
     "babel-core": "^6.26.3",

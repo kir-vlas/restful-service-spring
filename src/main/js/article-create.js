@@ -7,7 +7,9 @@ const client = require('./client');
 class CreateDialog extends React.Component{
     constructor(props) {
         super(props);
+        this.state = { isDialogOpened: false };
         this.handleSubmit = this.handleSubmit.bind(this);
+        this.toggleModal = this.toggleModal.bind(this);
     }
 
     handleSubmit(e) {
@@ -22,24 +24,28 @@ class CreateDialog extends React.Component{
             ReactDOM.findDOMNode(this.refs[attribute]).value = '';
         });
 
-        window.location = "#";
+        this.toggleModal(e);
     }
 
+    toggleModal(e){
+        e.preventDefault();
+        this.setState({isDialogOpened: !this.state.isDialogOpened});
+    }
 
     render() {
         var inputs = this.props.attributes.map(attribute =>
             <p key={attribute}>
-                <input type="text" placeholder={attribute} ref={attribute} className="field" />
+                <textarea type="text" placeholder={attribute} ref={attribute} className="field" />
             </p>
         );
 
         return (
-            <div>
-                <a href="#createArticle">Create</a>
+            <div class="modalContainer">
+                <a onClick={this.toggleModal}>Create Article</a>
 
-                <div id="createArticle" className="modalDialog">
+                <div id="createArticle" className="modalDialog" style={{display: this.state.isDialogOpened? 'flex':'none'}}>
                     <div>
-                        <a href="#" title="Close" className="close">X</a>
+                        <a title="Close" onClick={this.toggleModal} className="close">X</a>
 
                         <h2>Create new article</h2>
 

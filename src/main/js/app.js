@@ -3,8 +3,10 @@
 const React = require('react');
 const ReactDOM = require('react-dom');
 const client = require('./client');
+const when = require('when');
 const follow = require('./follow');
 import CreateDialog from './article-create';
+import UpdateDialog from './article-update';
 
 const root = '/api';
 
@@ -14,6 +16,7 @@ class App extends React.Component{
         this.state = {articles: [], attributes: [], pageSize: 2, links: {}};
         this.updatePageSize = this.updatePageSize.bind(this);
         this.onCreate = this.onCreate.bind(this);
+        this.onUpdate = this.onUpdate.bind(this);
         this.onDelete = this.onDelete.bind(this);
         this.onNavigate = this.onNavigate.bind(this);
     }
@@ -34,6 +37,7 @@ class App extends React.Component{
             return follow(client, root, [
                 {rel: 'articles', params: {'size': this.state.pageSize}}]);
         }).then(response => {
+            console.log(response.entity._links);
             if (typeof response.entity._links.last != "undefined") {
                 this.onNavigate(response.entity._links.last.href);
             } else {
@@ -42,19 +46,55 @@ class App extends React.Component{
         });
     }
 
+    onUpdate(article, updatedArticle){
+        client({
+            method: 'PUT',
+            path: article.entity._links.self.href,
+            entity: updatedArticle,
+            headers: {
+                'Content-Type': 'application/json',
+                'If-Match': article.headers.Etag
+            }
+        }).then(response => {
+            console.log("SUCCESS!!!");
+            this.loadFromServer(this.state.pageSize);
+        }, response => {
+            console.log(response);
+            if (response.status.code === 412) {
+                alert('DENIED: Unable to update ' +
+                    article.entity._links.self.href + '. Your copy is stale!')
+            }
+        });
+    }
+
     onNavigate(navUri) {
-        client({method: 'GET', path: navUri}).then(articleCollection => {
+        client({
+            method: 'GET',
+            path: navUri
+        }).then(
+            articleCollection => {
+                this.links = articleCollection.entity._links;
+
+                return articleCollection.entity._embedded.articles.map(article =>
+                    client({
+                        method: 'GET',
+                        path: article._links.self.href
+                    })
+                );
+        }).then(articlePrimises => {
+            return when.all(articlePrimises);
+        }).then(articles => {
             this.setState({
-                articles: articleCollection.entity._embedded.articles,
-                attributes: this.state.attributes,
+                articles: articles,
+                attributes: Object.keys(this.schema.properties),
                 pageSize: this.state.pageSize,
-                links: articleCollection.entity._links
+                links: this.links
             });
         });
     }
 
     onDelete(article) {
-        client({method: 'DELETE', path: article._links.self.href}).then(response => {
+        client({method: 'DELETE', path: article.entity._links.self.href}).then(response => {
             this.loadFromServer(this.state.pageSize);
         });
     }
@@ -69,14 +109,24 @@ class App extends React.Component{
                 headers: {'Accept': 'application/schema+json'}
             }).then(schema => {
                 this.schema = schema.entity;
+                this.links = articleCollection.entity._links;
                 return articleCollection;
             });
         }).then(articleCollection => {
+            return articleCollection.entity._embedded.articles.map(article =>
+                client({
+                    method: 'GET',
+                    path: article._links.self.href
+                })
+            );
+        }).then(articlePromises => {
+            return when.all(articlePromises);
+        }).then(articles => {
             this.setState({
-                articles: articleCollection.entity._embedded.articles,
+                articles: articles,
                 attributes: Object.keys(this.schema.properties),
                 pageSize: pageSize,
-                links: articleCollection.entity._links});
+                links: this.links});
         });
     }
 
@@ -93,6 +143,8 @@ class App extends React.Component{
                 <ArticleList articles = {this.state.articles}
                              links={this.state.links}
                              pageSize={this.state.pageSize}
+                             attributes={this.state.attributes}
+                             onUpdate={this.onUpdate}
                              onNavigate={this.onNavigate}
                              onDelete={this.onDelete}
                              updatePageSize={this.updatePageSize}/>
@@ -145,7 +197,11 @@ class ArticleList extends React.Component{
 
     render(){
         var articles = this.props.articles.map(blogarticle =>
-        <Article key={blogarticle._links.self.href} blogarticle={blogarticle} onDelete={this.props.onDelete} />);
+        <Article key={blogarticle.entity._links.self.href}
+                 blogarticle={blogarticle}
+                 attributes={this.props.attributes}
+                 onUpdate={this.props.onUpdate}
+                 onDelete={this.props.onDelete} />);
         var navLinks = [];
         if ("first" in this.props.links) {
             navLinks.push(<button key="first" onClick={this.handleNavFirst}>&lt;&lt;</button>);
@@ -160,7 +216,7 @@ class ArticleList extends React.Component{
             navLinks.push(<button key="last" onClick={this.handleNavLast}>&gt;&gt;</button>);
         }
         return (
-            <div>
+            <div className="article-list">
                 <input ref="pageSize" defaultValue={this.props.pageSize} onInput={this.handleInput}/>
                 {articles}
             </div>
@@ -180,10 +236,13 @@ class Article extends React.Component{
     render(){
         return (
             <div>
-                <h3>{this.props.blogarticle.title}</h3>
+                <h3>{this.props.blogarticle.entity.title}</h3>
                 <hr/>
-                <div>{this.props.blogarticle.textBody}</div>
+                <div>{this.props.blogarticle.entity.textBody}</div>
                 <hr/>
+                <UpdateDialog article={this.props.blogarticle}
+                                attributes={this.props.attributes}
+                                onUpdate={this.props.onUpdate}/>
                 <button onClick={this.handleDelete}>Delete</button>
             </div>
         )
