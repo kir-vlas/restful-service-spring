@@ -46,7 +46,7 @@ main{
 }
 
 .modalDialog{
-    position: absolute;
+    position: fixed;
     width: 700px;
     height:500px;
     flex-direction: column;
