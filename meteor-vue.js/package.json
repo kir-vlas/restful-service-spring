@@ -8,7 +8,10 @@
     "@babel/runtime": "7.0.0-beta.55",
     "axios": "^0.18.0",
     "json": "^9.0.6",
+    "meteor-mysql": "^2.8.9",
     "meteor-node-stubs": "^0.4.1",
+    "mysql": "^2.16.0",
+    "sync-mysql": "^3.0.1",
     "vue": "^2.5.17",
     "vue-meteor-tracker": "^1.0.3",
     "vue-router": "^3.0.1"

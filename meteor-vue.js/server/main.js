@@ -1,21 +1,32 @@
 import { Meteor } from 'meteor/meteor';
+const mysql = require('sync-mysql');
+let connection;
+
+Meteor.startup(() =>{
+    connection = new mysql({
+        host: 'localhost',
+        user: 'application-db',
+        password: '123456',
+        database: 'blogging-db'
+    });
+})
 
 Meteor.methods({
     loadArticles: function(){
-        const result = HTTP.call('GET','http://localhost:8080/api/articles');
+        let result = connection.query('SELECT * FROM `article`');
+        connection._end();
         return result;
     },
     createArticle: function(newArticle){
-        HTTP.call('POST','http://localhost:8080/api/articles',{data: newArticle, headers:{'Content-Type': 'application/json'}})
+        connection.query('INSERT INTO `article` (`text_body`, `title`) VALUES (?, ?)', [newArticle.text_body, newArticle.title]);
+        connection._end();
     },
-    editArticle: function(oldArticle,newArticle){
-        HTTP.call('PUT', oldArticle._links.self.href,{
-            data:newArticle,
-            headers: {
-                'Content-Type': 'application/json',
-            }});
+    editArticle: function(newArticle){
+        connection.query('UPDATE `article` SET `title`=?, `text_body` = ? WHERE `id` = ?', [newArticle.title,newArticle.text_body,newArticle.id]);
+        connection._end();
     },
     deleteArticle: function(article){
-        HTTP.call('DELETE',article._links.self.href);
+        connection.query('DELETE FROM `article` WHERE `id` = ?', [article.id]);
+        connection._end();
     }
 });

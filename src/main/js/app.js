@@ -52,8 +52,7 @@ class App extends React.Component{
             path: article.entity._links.self.href,
             entity: updatedArticle,
             headers: {
-                'Content-Type': 'application/json',
-                'If-Match': article.headers.Etag
+                'Content-Type': 'application/json'
             }
         }).then(response => {
             console.log("SUCCESS!!!");

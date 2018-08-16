@@ -2,21 +2,20 @@ package com.mightymage.bloggingservice.entity;
 
 import lombok.Data;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Version;
+import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+
 @Entity
 @Data
+@Table(name="article")
 public class Article {
-    private @Id @GeneratedValue int id;
-    private String title;
-    private String textBody;
+    private @Id @GeneratedValue(strategy=GenerationType.AUTO) @Column(name="id") int id;
+    private @Column(name="title") String title;
+    private @Column(name="textBody") String textBody;
 
-    private @Version @JsonIgnore Long version;
+    private @Transient @Version @JsonIgnore Long version;
 
     private Article () {}
 

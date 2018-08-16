@@ -4,18 +4,18 @@
             <button @click="deleteArticle(article)" class="edit-button">Delete</button>
             <button @click="editArticle(article)" class="edit-button">Edit</button>
             <h3>{{article.title}}</h3>
-            <p>{{article.textBody}}</p>
+            <p>{{article.text_body}}</p>
             <div v-if="formVisible" class="edit-container">
                 <input type="text" v-model="newArticle.title" placeholder="Title"/>
-                <textarea class="article-text" v-model="newArticle.textBody" placeholder="text"></textarea>
-                <button @click="editSubmit(article,newArticle)">Send</button>
+                <textarea class="article-text" v-model="newArticle.text_body" placeholder="text"></textarea>
+                <button @click="editSubmit()">Send</button>
             </div>
             <hr/>
         </div>
         <button @click="showCreateForm()">Create Article</button>
         <div class="create-form" v-show="createFormVisible">
             <input type="text" v-model="newArticle.title" placeholder="Title"/>
-            <textarea class="article-text" v-model="newArticle.textBody" placeholder="text"></textarea>
+            <textarea class="article-text" v-model="newArticle.text_body" placeholder="text"></textarea>
             <button @click="createArticle(article)">Send</button>
         </div>
     </div>
@@ -31,17 +31,16 @@
                 createFormVisible: false,
                 articles: [],
                 newArticle:{
+                    id:0,
                     title:'',
-                    textBody:''
+                    text_body:''
                 }
             }
         },
         created(){
             let tmp;
             Meteor.call("loadArticles", (error, result) => {
-                tmp = result.valueOf();
-                tmp = JSON.parse(tmp.content)._embedded.articles;
-                this.articles = tmp;
+                this.articles = result.valueOf();
             });
         },
         methods:{
@@ -55,12 +54,13 @@
             editArticle(article){
                 this.formVisible = !this.formVisible;
                 this.newArticle = {
+                    id:article.id,
                     title: article.title,
-                    textBody: article.textBody
+                    text_body: article.text_body
                 }
             },
-            editSubmit(article){
-                Meteor.call("editArticle",article,this.newArticle);
+            editSubmit(){
+                Meteor.call("editArticle",this.newArticle);
                 this.fetchData();
             },
             deleteArticle(article){
@@ -68,16 +68,14 @@
                 this.fetchData();
             },
             fetchData(){
-                let tmp;
                 Meteor.call("loadArticles", (error, result) => {
-                    tmp = result.valueOf();
-                    tmp = JSON.parse(tmp.content)._embedded.articles;
-                    this.articles = tmp;
+                    this.articles = result.valueOf();
                     this.formVisible = false;
                     this.createFormVisible = false;
                     this.newArticle = {
+                        id:0,
                         title: '',
-                        textBody: ''
+                        text_body: ''
                     }
                 });
             }

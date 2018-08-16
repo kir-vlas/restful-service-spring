@@ -5,4 +5,5 @@ import App from '../imports/ui/app.vue';
 
 Meteor.startup(() => {
     new Vue(App).$mount(document.body);
+
 });
