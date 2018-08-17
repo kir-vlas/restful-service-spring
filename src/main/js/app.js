@@ -10,6 +10,9 @@ import UpdateDialog from './article-update';
 
 const root = '/api';
 
+//TODO implement Redux and refactor components
+//TODO good layout and design
+
 class App extends React.Component{
     constructor(props){
         super(props);
