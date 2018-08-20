@@ -1,13 +1,17 @@
 <template>
-    <main>
+    <div>
+        <app-header></app-header>
+
+        <main>
         <div v-if="$route.meta.layout === 'login'">
             <div v-if="!currentUser" class="login-box">
                 <span class="close"><a href="/#/">X</a></span>
                 <h2>Login</h2>
                 <div>
-                <p>Username: <input placeholder="username" v-model="user.username" type="text"/></p>
-                <p>Password: <input placeholder="password" v-model="user.password" type="password"/></p>
-                <button @click="loginUser()">Login</button>
+                    <span v-if="errorLabel" class="error-label">Wrong username/password</span>
+                    <p>Username: <input placeholder="username" v-model="user.username" type="text"/></p>
+                    <p>Password: <input @keyup.enter="loginUser()" placeholder="password" v-model="user.password" type="password"/></p>
+                    <button @click="loginUser()">Login</button>
                 </div>
             </div>
         </div>
@@ -17,7 +21,7 @@
                 <h2>Register</h2>
                 <div>
                     <p>Username: <input placeholder="username" v-model="user.username" type="text"/></p>
-                    <p>Password: <input placeholder="password" v-model="user.password" type="password"/></p>
+                    <p>Password: <input @keyup.enter="registerUser()" placeholder="password" v-model="user.password" type="password"/></p>
                     <button @click="registerUser()">Sign up</button>
                 </div>
 
@@ -30,13 +34,12 @@
                 <a href="/#/sign-up">Sign Up</a>
             </span>
         </div>
-        <div v-if="articles" v-for="article of articles">
+        <div v-if="articles && $route.meta.layout !== 'article'" v-for="article of articles">
             <div v-if="currentUser">
-                <button v-if="currentUser.username === article.author || currentUser.username === 'admin'" @click="deleteArticle(article)" class="edit-button">Delete</button>
-                <button v-if="currentUser.username === article.author || currentUser.username === 'admin'" @click="editArticle(article)" class="edit-button">Edit</button>
+                <button v-if="currentUser.username === 'admin'" @click="deleteArticle(article)" class="edit-button">Delete</button>
+                <button v-if="currentUser.username === 'admin'" @click="editArticle(article)" class="edit-button">Edit</button>
             </div>
-            <h3>{{article.title}}</h3>
-            <p>{{article.textBody}}</p>
+            <h3><router-link :to="{name:'article', params: {id:article._id} }">{{article.title}}</router-link></h3>
             <div v-if="formVisible" class="edit-container">
                 <input type="text" v-model="newArticle.title" placeholder="Title"/>
                 <textarea class="article-text" v-model="newArticle.textBody" placeholder="text"></textarea>
@@ -47,22 +50,24 @@
         <div v-if="articles.length===0">
             <h2>No articles found!</h2>
         </div>
+        <post v-if="$route.meta.layout === 'article'"></post>
         <button v-if="currentUser" @click="showCreateForm()">Create Article</button>
         <div class="create-form" v-show="createFormVisible">
             <input type="text" v-model="newArticle.title" placeholder="Title"/>
             <textarea class="article-text" v-model="newArticle.textBody" placeholder="text"></textarea>
             <button @click="createArticle(article)">Send</button>
         </div>
-    </main>
+        </main>
+        <app-footer></app-footer>
+    </div>
 </template>
 
 <script>
 
-    //TODO Implements roles properly, make own view for article, main page must contain only article's headers.
+    //TODO Make options for article page
     //TODO Add cookie and sessions for signed in users
     //TODO comments for public articles
     //TODO private articles
-    //TODO rename articles to posts
 
     import {Meteor} from 'meteor/meteor';
 
@@ -71,6 +76,7 @@
             return {
                 formVisible: false,
                 createFormVisible: false,
+                errorLabel: false,
                 articles: [],
                 newArticle:{
                     title:'',
@@ -94,16 +100,17 @@
                 this.createFormVisible = !this.createFormVisible;
             },
             createArticle(){
-                this.newArticle.author = Meteor.user().username;
+                this.newArticle.author = Meteor.user();
                 Meteor.call("createArticle", this.newArticle);
                 this.fetchData();
             },
             editArticle(article){
                 this.formVisible = !this.formVisible;
                 this.newArticle = {
-                    _id:article._id,
+                    _id: article._id,
                     title: article.title,
-                    textBody: article.textBody
+                    textBody: article.textBody,
+                    author: Meteor.user()
                 }
             },
             editSubmit(){
@@ -118,23 +125,27 @@
                 Meteor.call("loadArticles", (error, result) => {
                     this.articles = result.valueOf();
                     this.formVisible = false;
+                    this.errorLabel = false;
                     this.createFormVisible = false;
                     this.newArticle = {
                         title: '',
-                        textBody: ''
+                        textBody: '',
+                        author:''
                     };
                     this.currentUser = Meteor.user();
                 });
             },
             loginUser(){
                 Meteor.loginWithPassword(this.user.username,this.user.password, (error) => {
-                    if (error) throw error;
+                    if (error) {
+                        this.errorLabel = true;
+                    }
                     else {
                         this.fetchData();
                         this.user = {
                             username: '',
                             password: ''
-                        }
+                        };
                         this.$router.push('/');
                     }
                 });
@@ -209,5 +220,9 @@
     }
     .under-header{
         height:30px;
+    }
+
+    .error-label{
+        color:red;
     }
 </style>

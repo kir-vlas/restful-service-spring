@@ -6,6 +6,7 @@ akryum:vue-component@0.14.0
 akryum:vue-component-dev-client@0.4.2
 akryum:vue-component-dev-server@0.1.1
 akryum:vue-stylus@0.1.0
+alanning:roles@1.2.16
 allow-deny@1.1.0
 autoupdate@1.4.1
 babel-compiler@7.1.1
