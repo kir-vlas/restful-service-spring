@@ -25,6 +25,9 @@ Meteor.methods({
         }
         else throw Error('Wrong user');
     },
+    commentArticle: function(articleId, comment){
+        articles.update(articleId, {$push: {comments: comment}});
+    },
     deleteArticle: function(article){
         if (Roles.userIsInRole(Meteor.user(), ['admin']) || article.author._id === Meteor.user()._id)
             articles.remove(article._id);

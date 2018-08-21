@@ -1,57 +1,30 @@
 <template>
     <div>
         <app-header></app-header>
-
         <main>
-        <div v-if="$route.meta.layout === 'login'">
-            <div v-if="!currentUser" class="login-box">
-                <span class="close"><a href="/#/">X</a></span>
-                <h2>Login</h2>
-                <div>
-                    <span v-if="errorLabel" class="error-label">Wrong username/password</span>
-                    <p>Username: <input placeholder="username" v-model="user.username" type="text"/></p>
-                    <p>Password: <input @keyup.enter="loginUser()" placeholder="password" v-model="user.password" type="password"/></p>
-                    <button @click="loginUser()">Login</button>
-                </div>
-            </div>
-        </div>
-        <div v-if="$route.meta.layout === 'sign-up'">
-            <div class="login-box">
-                <span class="close"><a href="/#/">X</a></span>
-                <h2>Register</h2>
-                <div>
-                    <p>Username: <input placeholder="username" v-model="user.username" type="text"/></p>
-                    <p>Password: <input @keyup.enter="registerUser()" placeholder="password" v-model="user.password" type="password"/></p>
-                    <button @click="registerUser()">Sign up</button>
-                </div>
-
-            </div>
-        </div>
+        <login :par-user="currentUser" @update="afterLogin" v-if="$route.meta.layout === 'login'"></login>
+        <signup :par-user="currentUser" @update="afterLogin" v-if="$route.meta.layout === 'sign-up'"></signup>
         <div class="under-header">
             <span v-if="currentUser">Welcome, {{currentUser.username}}<button @click="logout()">Logout</button></span>
             <span v-else>
-                <a href="/#/login">Login</a>
-                <a href="/#/sign-up">Sign Up</a>
+                <a @click="login">Login</a>
+                <a @click="signup">Sign Up</a>
             </span>
         </div>
-        <div v-if="articles && $route.meta.layout !== 'article'" v-for="article of articles">
+        <div v-if="articles && $route.meta.layout === 'main'" v-for="article of articles">
             <div v-if="currentUser">
                 <button v-if="currentUser.username === 'admin'" @click="deleteArticle(article)" class="edit-button">Delete</button>
                 <button v-if="currentUser.username === 'admin'" @click="editArticle(article)" class="edit-button">Edit</button>
             </div>
             <h3><router-link :to="{name:'article', params: {id:article._id} }">{{article.title}}</router-link></h3>
-            <div v-if="formVisible" class="edit-container">
-                <input type="text" v-model="newArticle.title" placeholder="Title"/>
-                <textarea class="article-text" v-model="newArticle.textBody" placeholder="text"></textarea>
-                <button @click="editSubmit()">Send</button>
-            </div>
             <hr/>
         </div>
+        <edit :art="articles" @update="afterChange" v-if="$route.meta.layout === 'edit'" class="edit-container"></edit>
         <div v-if="articles.length===0">
             <h2>No articles found!</h2>
         </div>
-        <post v-if="$route.meta.layout === 'article'"></post>
-        <button v-if="currentUser" @click="showCreateForm()">Create Article</button>
+        <post :art="articles" @update="afterChange" v-if="$route.meta.layout === 'article'"></post>
+        <button v-if="currentUser && $route.meta.layout === 'main'" @click="showCreateForm()">Create Article</button>
         <div class="create-form" v-show="createFormVisible">
             <input type="text" v-model="newArticle.title" placeholder="Title"/>
             <textarea class="article-text" v-model="newArticle.textBody" placeholder="text"></textarea>
@@ -64,9 +37,10 @@
 
 <script>
 
-    //TODO Make options for article page
-    //TODO Add cookie and sessions for signed in users
-    //TODO comments for public articles
+    //TODO edit and delete comments
+    //TODO pagination and sorting
+    //TODO user profile page
+    //TODO pre-moderate post public articles
     //TODO private articles
 
     import {Meteor} from 'meteor/meteor';
@@ -81,7 +55,8 @@
                 newArticle:{
                     title:'',
                     textBody:'',
-                    author:''
+                    author:'',
+                    comments: []
                 },
                 user:{
                     username:'',
@@ -91,9 +66,13 @@
             }
         },
         created(){
+            console.log(Meteor.user());
             Meteor.call("loadArticles", (error, result) => {
                 this.articles = result.valueOf();
             });
+        },
+        mounted(){
+            this.fetchData();
         },
         methods:{
             showCreateForm(){
@@ -105,17 +84,7 @@
                 this.fetchData();
             },
             editArticle(article){
-                this.formVisible = !this.formVisible;
-                this.newArticle = {
-                    _id: article._id,
-                    title: article.title,
-                    textBody: article.textBody,
-                    author: Meteor.user()
-                }
-            },
-            editSubmit(){
-                Meteor.call("editArticle",this.newArticle);
-                this.fetchData();
+                this.$router.push({name: 'edit', params: {id:article._id}});
             },
             deleteArticle(article){
                 Meteor.call("deleteArticle",article);
@@ -123,49 +92,38 @@
             },
             fetchData(){
                 Meteor.call("loadArticles", (error, result) => {
-                    this.articles = result.valueOf();
-                    this.formVisible = false;
-                    this.errorLabel = false;
-                    this.createFormVisible = false;
-                    this.newArticle = {
-                        title: '',
-                        textBody: '',
-                        author:''
-                    };
-                    this.currentUser = Meteor.user();
-                });
-            },
-            loginUser(){
-                Meteor.loginWithPassword(this.user.username,this.user.password, (error) => {
-                    if (error) {
-                        this.errorLabel = true;
-                    }
-                    else {
-                        this.fetchData();
-                        this.user = {
-                            username: '',
-                            password: ''
-                        };
-                        this.$router.push('/');
-                    }
-                });
-            },
-            registerUser(){
-                Accounts.createUser(this.user,(error) => {
                     if (error) throw error;
                     else {
-                        this.fetchData();
-                        this.user = {
-                            username: '',
-                            password: ''
-                        }
-                        this.$router.push('/');
+                        this.articles = result.valueOf();
+                        this.formVisible = false;
+                        this.errorLabel = false;
+                        this.createFormVisible = false;
+                        this.newArticle = {
+                            title: '',
+                            textBody: '',
+                            author: '',
+                            comments:[]
+                        };
+                        this.currentUser = Meteor.user();
+                        console.log(this.currentUser);
                     }
                 });
+            },
+            login(){
+                this.$router.push('/login');
+            },
+            signup(){
+                this.$router.push('/sign-up');
             },
             logout(){
                 Meteor.logout();
                 this.fetchData();
+            },
+            afterLogin(newU){
+                this.currentUser = newU;
+            },
+            afterChange(newArticleCollection){
+                this.articles = newArticleCollection;
             }
         }
 
@@ -175,6 +133,15 @@
 <style>
     body{
         margin: 0px;
+        font-family: Arial;
+    }
+
+    a{
+        text-decoration: none;
+    }
+
+    a:visited{
+        color:black;
     }
     .article-text{
         height:300px;
@@ -201,18 +168,7 @@
         width: 500px;
         height:450px;
     }
-    .login-box{
-        display: flex;
-        flex-direction: column;
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background-color: white;
-        width:300px;
-        height:250px;
-        border: 1px solid black;
-    }
+
     .close{
         position: absolute;
         top: 5px;
@@ -220,9 +176,5 @@
     }
     .under-header{
         height:30px;
-    }
-
-    .error-label{
-        color:red;
     }
 </style>
