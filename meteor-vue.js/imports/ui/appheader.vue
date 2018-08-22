@@ -6,14 +6,14 @@
 
 <script>
     export default {
-        name: 'app-header'
+        name: 'appheader'
     }
 </script>
 
 <style>
     header{
         height:80px;
-        background-color: aquamarine;
+        background-color: #b5fcff;
         padding:20px;
         display: flex;
         align-items: center;

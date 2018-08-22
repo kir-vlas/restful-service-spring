@@ -12,6 +12,7 @@
     "mysql": "^2.16.0",
     "vue": "^2.5.17",
     "vue-meteor-tracker": "^1.0.3",
+    "vue-paginate": "^3.6.0",
     "vue-router": "^3.0.1"
   },
   "devDependencies": {}

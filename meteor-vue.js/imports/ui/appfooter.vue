@@ -6,14 +6,14 @@
 
 <script>
     export default {
-        name: 'app-footer'
+        name: 'appfooter'
     }
 </script>
 
 <style>
     footer{
         height:30px;
-        background-color: azure;
+        background-color: #beeaff;
         padding:10px;
         display: flex;
         align-items: center;
