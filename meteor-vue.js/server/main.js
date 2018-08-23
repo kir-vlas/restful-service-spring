@@ -22,7 +22,7 @@ Meteor.methods({
     },
     editArticle: function(newArticle){
         if (Roles.userIsInRole(Meteor.user(), ['admin']) || newArticle.author._id === Meteor.user()._id) {
-            articles.update({_id: newArticle._id}, {title: newArticle.title, textBody: newArticle.textBody,author:newArticle.author});
+            articles.update({_id: newArticle._id}, {title: newArticle.title, textBody: newArticle.textBody,author:newArticle.author, comments: newArticle.comments, isPrivate: newArticle.isPrivate});
         }
         else throw Error('Wrong user');
     },

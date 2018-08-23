@@ -10,26 +10,30 @@
                 <button @click="logout()" class="create-button header-button"><span class="header-button-text">Logout</span></button>
             </div>
             <div class="anonymous" v-else>
-                <a @click="login">Login</a>
+                <a @click="login">Sign In</a>
                 <a @click="signup">Sign Up</a>
             </div>
         </div>
         <userprofile v-if="$route.meta.layout === 'userprofile'"></userprofile>
         <div class="articles-main" v-if="$route.meta.layout === 'main'">
-            <paginate name="articles" :list="articles" :per="5">
+            <paginate name="articles" :list="articles" :per="6">
                 <div v-for="article of paginated('articles')">
-                <div class="article-card" v-if="!article.isPrivate">
-                    <div v-if="currentUser">
-                        <button v-if="currentUser.username === 'admin'" @click="deleteArticle(article)" class="edit-button">Delete</button>
-                        <button v-if="currentUser.username === 'admin'" @click="editArticle(article)" class="edit-button">Edit</button>
+                <div class="article-card" :title="article.title"  v-if="!article.isPrivate">
+                    <div class="edit-buttons" v-if="currentUser">
+                        <button v-if="currentUser.username === 'admin'" @click="deleteArticle(article)" class="create-button edit-button"><span class="edit-button-text">Delete</span></button>
+                        <button v-if="currentUser.username === 'admin'" @click="editArticle(article)" class="create-button edit-button"><span class="edit-button-text">Edit</span></button>
                     </div>
-                    <h3><router-link :to="{name:'article', params: {id:article._id} }">{{article.title}}</router-link></h3>
+                    <h2 class="article-header" @click="goTo(article._id)">{{article.title}}</h2>
+                    <h5 class="article-author">Author: {{article.author.username}}</h5>
+                    <span class="article-text">{{article.textBody.substr(0,200)}}</span>
                 </div>
                 <div v-else-if="currentUser">
-                    <div class="article-card private-article" v-if="currentUser.username === article.author.username">
+                    <div class="article-card private-article" :title="article.title" @click="goTo(article._id)" v-if="currentUser.username === article.author.username">
                         <button v-if="currentUser.username === 'admin'" @click="deleteArticle(article)" class="edit-button">Delete</button>
                         <button v-if="currentUser.username === 'admin'" @click="editArticle(article)" class="edit-button">Edit</button>
-                        <h3><router-link :to="{name:'article', params: {id:article._id} }">{{article.title}}</router-link></h3>
+                        <h2 class="article-header">{{article.title}}</h2>
+                        <h5 class="article-author">Author: {{article.author.username}}</h5>
+                        <span class="article-text">{{article.textBody.length > 200?article.textBody.substr(0,200)+'...':article.textBody}}</span>
                     </div>
                 </div>
                 </div>
@@ -58,12 +62,17 @@
 
 <script>
 
-    //TODO design and layout
     //TODO more fields for users
     //TODO admin panel with registered users
     //TODO suspend and ban users
     //TODO register new administrators
     //TODO verify e-mail
+    //TODO Sign-Up password validation
+    //TODO articles field validation
+    //TODO attach pictures to articles
+    //TODO comments tree
+    //TODO refactor styles
+    //TODO add ability to change article privacy
 
     import {Meteor} from 'meteor/meteor';
 
@@ -146,6 +155,7 @@
             },
             logout(){
                 Meteor.logout();
+                this.$router.push('/');
                 this.fetchData();
             },
             afterLogin(newU){
@@ -153,6 +163,9 @@
             },
             afterChange(newArticleCollection){
                 this.articles = newArticleCollection;
+            },
+            goTo(id){
+                this.$router.push({name: 'article', params: {id:id}});
             }
         }
 }
@@ -204,6 +217,14 @@
         color:inherit;
     }
 
+    .article-author{
+
+    }
+
+    .article-header{
+        cursor:pointer;
+    }
+
     .article-text{
         min-height:300px;
     }
@@ -236,9 +257,20 @@
         cursor:pointer;
     }
 
+    .edit-button-text{
+        padding:12px 12px;
+    }
+
     .edit-button{
         float:right;
+        min-height: 25px;
+        margin:0;
     }
+
+    .edit-buttons{
+        z-index:2;
+    }
+
     .edit-container{
         display: flex;
         flex-direction: column;
@@ -258,7 +290,7 @@
         align-items: center;
         justify-content: flex-end;
         background-color: white;
-        margin-bottom:100px;
+        margin-bottom:50px;
         width:100%;
     }
 
@@ -286,20 +318,26 @@
         box-shadow: 0 10px 10px 0 rgba(0, 0, 0, 0.3);
     }
 
-    .private-article a:link{
-        color:grey;
+    .anonymous{
+        cursor:pointer;
+        display: flex;
+        display: -webkit-flex;
+        width:150px;
+        justify-content: space-between;
+        margin-right:30px;
     }
 
-    .private-article a:visited{
+    .private-article .article-header{
         color:grey;
     }
 
     .articles-main .page-links{
         flex-direction: row;
         justify-content: space-around;
+        margin-bottom: 80px;
     }
 
-    .articles-main .page-links li{
+    .articles-main .page-links li a{
         background-color: #dbf1ff;
         padding:10px;
         border-radius: 5px;
@@ -307,7 +345,7 @@
         transition: background-color .3s;
     }
 
-    .articles-main .page-links li:hover{
+    .articles-main .page-links li a:hover{
         background-color: #d2e6f4;
         padding:10px;
         border-radius: 5px;
@@ -322,9 +360,11 @@
     }
 
     .create-button{
+        cursor:pointer;
         display: block;
         margin: 30px auto;
         padding: 0;
+        min-height:25px;
         overflow: hidden;
         border-width: 0;
         outline: none;
@@ -338,12 +378,12 @@
 
     .create-button .init-text{
         display: block;
-        padding: 18px 48px;
+        padding: 12px 48px;
     }
 
     .create-button .submit-text{
         display: block;
-        padding: 12px 16px;
+        padding: 6px 6px;
     }
 
     .create-button:hover, .create-button:focus {

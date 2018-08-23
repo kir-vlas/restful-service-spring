@@ -1,5 +1,5 @@
 <template>
-    <header>
+    <header @click="$router.push('/')">
 
     </header>
 </template>

@@ -1,12 +1,21 @@
 <template>
-    <div class="login-box">
-        <span class="close"><a @click="$router.go(-1)">X</a></span>
+    <div v-if="!currentUser" class="login-box">
+        <div @click="$router.go(-1)" class="close"></div>
         <h2>Sign Up</h2>
-        <div>
-            <p>Username: <input placeholder="username" v-model="user.username" type="text"/></p>
-            <p>Password: <input @keyup.enter="registerUser()" placeholder="password" v-model="user.password" type="password"/></p>
-            <button @click="registerUser()">Sign up</button>
+        <div class="md-input">
+            <input class="md-text-field" required title="Username" v-model="user.username" type="text"/>
+            <span class="highlight"></span>
+            <span class="bar"></span>
+            <label>Username</label>
         </div>
+        <div class="md-input">
+            <input class="md-text-field" required title="Password" v-model="user.password" type="password"/>
+            <span class="highlight"></span>
+            <span class="bar"></span>
+            <label>Password</label>
+        </div>
+        <span v-if="errorLabel" class="error-label">Please, enter username and password</span>
+        <button class="create-button login-button" @click="registerUser()"><span class="login-button-text">Sign Up</span></button>
     </div>
 </template>
 
@@ -28,6 +37,10 @@
         },
         methods:{
             registerUser(){
+                if (!(this.user.username && this.user.password)){
+                    this.errorLabel = true;
+                    throw Error('Not valid credentials');
+                }
                 Accounts.createUser(this.user,(error) => {
                     if (error) throw error;
                     else {
@@ -53,9 +66,6 @@
         left: 50%;
         transform: translate(-50%, -50%);
         background-color: white;
-        width:300px;
-        height:250px;
-        border: 1px solid black;
     }
 
     .error-label{

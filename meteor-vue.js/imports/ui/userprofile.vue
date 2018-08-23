@@ -1,12 +1,11 @@
 <template>
-    <div v-if="currentUser">
-        <router-link to="/">Back.</router-link>
-        <p>Username</p>
-        <input type="text" readonly v-model="currentUser.username"/>
+    <div class="user-box" v-if="currentUser">
+        <p>Username
+        <input type="text" readonly v-model="currentUser.username"/></p>
         <p v-if="currentUser.emails">E-mail: {{currentUser.emails[0].address}}</p>
-
+        <button class="create-button submit-button" @click="$router.go(-1)">Back</button>
     </div>
-    <div v-else>
+    <div class="user-box" v-else>
         You're not logged in. <router-link to="/">Back.</router-link>
     </div>
 </template>
@@ -26,5 +25,11 @@
 </script>
 
 <style>
-
+    .user-box{
+        width:800px;
+        height:400px;
+        padding:40px;
+        background-color: white;
+        box-shadow: 0 20px 20px 0 rgba(0, 0, 0, 0.3);
+    }
 </style>

@@ -1,21 +1,22 @@
 <template>
     <div class="article">
-        <router-link to="/">Back</router-link>
-        <div v-if="user">
-            <button v-if="user.username === 'admin' || user.username === articleAuthor.username" @click="removeArticle(article)" class="edit-button">Delete</button>
-            <button v-if="user.username === 'admin' || user.username === articleAuthor.username" @click="editArticle(article)" class="edit-button">Edit</button>
+        <div>
+            <router-link to="/">Back</router-link>
         </div>
-        <h5>author: {{article.author.username}}</h5>
-        <h3>{{articleTitle}}</h3>
-        <p>{{articleText}}</p>
-        <hr/>
+        <div v-if="user">
+            <button v-if="user.username === 'admin' || user.username === articleAuthor.username" @click="removeArticle(article)" class="create-button edit-button"><span class="edit-button-text">Delete</span></button>
+            <button v-if="user.username === 'admin' || user.username === articleAuthor.username" @click="editArticle(article)" class="create-button edit-button"><span class="edit-button-text">Edit</span></button>
+        </div>
+        <h5>By: {{article.author.username}}</h5>
+        <h1 class="article-title">{{articleTitle}}</h1>
+        <p class="article-body">{{articleText}}</p>
+        <div class="comment-section">
         <div v-if="articleComments" class="comment" v-for="comment of articleComments">
-            <h3>Comments:</h3>
             <h4>{{comment.author.username}}</h4>
-            <p v-if="!commentField">{{comment.commentText}}</p>
+            <p v-if="commentField || !(editCommentId === comment.id)">{{comment.commentText}}</p>
             <div class="comment-form-edit-container" v-else>
                 <textarea v-model="newComment.commentText" class="comment-edit-body"></textarea>
-                <button @click="editCommentSubmit" class="submit-button">Send</button>
+                <button @click="editCommentSubmit" class="create-button submit-button">Send</button>
             </div>
             <div v-if="user">
             <div v-if="user.username === 'admin' || user.username === comment.author.username">
@@ -27,16 +28,16 @@
         <div v-if="articleComments.length===0">
             <p>No comments</p>
         </div>
-        <hr/>
         <div v-if="user" class="comment-form">
-            <button @click="toggleComment">Comment</button>
+            <button class="create-button comment-button" @click="toggleComment">Comment</button>
             <div class="comment-form-container" v-show="commentFormToggle">
                 <textarea v-model="newComment.commentText" class="comment-body"></textarea>
-                <button @click="comment" class="submit-button">Send</button>
+                <button @click="comment" class="create-button submit-button">Send</button>
             </div>
         </div>
         <div v-else>
-            <p>Only registered users can comment articles.</p>
+            <p>Only registered users can leave comments.</p>
+        </div>
         </div>
     </div>
 </template>
@@ -49,7 +50,8 @@
         props: ['art'],
         data(){
             return {
-                commentField:false,
+                commentField:true,
+                editCommentId:0,
                 commentFormToggle:false,
                 article:undefined,
                 articleTitle:'',
@@ -59,7 +61,7 @@
                 newComment: {
                     id:'',
                     commentText: '',
-                    author: undefined
+                    author: null
                 },
                 user: null
             }
@@ -74,7 +76,7 @@
                 this.newComment = {
                     id:'',
                     commentText:'',
-                    author:undefined
+                    author:null
                 }
             });
             this.user = Meteor.user();
@@ -99,6 +101,7 @@
                 })
             },
             editComment(comment){
+                this.editCommentId = comment.id;
                 this.newComment.commentText = comment.commentText;
                 this.commentField = !this.commentField;
                 this.newComment.id = comment.id;
@@ -124,6 +127,7 @@
                 Meteor.call('loadArticleById',this.$route.params.id, (error,result) => {
                     this.article = result;
                     this.articleTitle = result.title;
+                    this.editCommentId = 0;
                     this.articleText = result.textBody;
                     this.articleComments = result.comments;
                     this.articleAuthor = result.author;
@@ -141,15 +145,47 @@
 </script>
 
 <style>
-    .comment{
+    .article{
+        padding:30px;
+        width:1200px;
 
+        background-color: white;
+        box-shadow: 0 15px 15px rgba(0, 0, 0, .6);
+        margin-bottom: 80px;
+    }
+
+    .article-title{
+        margin-left:40px;
+    }
+
+    .article-body{
+        font-size:1.25rem;
+        min-height: 300px;
+    }
+
+    .comment{
+        padding:10px;
+        margin: 20px 0px;
+        background-color: #f6f7ff;
     }
 
     .comment-form{
 
     }
 
+    .comment-section{
+        border-top: 1px solid gray;
+    }
+
+    .comment-button{
+        margin:initial;
+        padding: 12px;
+    }
+
     .comment-form-container{
+        padding:15px;
+        background-color: #f6f7ff;
+        margin-top:20px;
         height:250px;
         display:flex;
         flex-direction: column;
@@ -158,21 +194,24 @@
     .comment-form-edit-container{
         display:flex;
         flex-direction: column;
-        height:150px;
+        height:100px;
     }
 
     .comment-body{
-        width:400px;
+        width:800px;
         height:200px;
     }
 
     .comment-edit-body{
         height:100px;
-        width:400px;
+        width:800px;
     }
 
     .submit-button{
+        margin:initial;
+        margin-top: 10px;
         height:40px;
-        width:406px;
+        width:80px;
     }
+
 </style>
