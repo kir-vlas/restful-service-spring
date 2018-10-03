@@ -1,5 +1,5 @@
 <template>
-    <div v-if="!currentUser" class="login-box">
+    <div v-if="!this.$parent.currentUser" class="login-box">
         <div @click="$router.go(-1)" class="close"></div>
         <h2>Sign In</h2>
         <div class="md-input">

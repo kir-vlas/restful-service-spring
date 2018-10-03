@@ -27,11 +27,11 @@ const router = new VueRouter({
 
 Meteor.startup(() => {
     new Vue({router, render: h => h(App)}).$mount(document.getElementsByTagName('app')[0]);
-    Vue.component('appheader', AppHeader);
-    Vue.component('appfooter', AppFooter);
+    Vue.component('app-header', AppHeader);
+    Vue.component('app-footer', AppFooter);
     Vue.component('post', Article);
     Vue.component('login', Login);
     Vue.component('signup',SignUp);
     Vue.component('edit', Edit);
-    Vue.component('userprofile', UserProfile);
+    Vue.component('user-profile', UserProfile);
 });

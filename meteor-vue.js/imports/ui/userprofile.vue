@@ -12,7 +12,7 @@
 
 <script>
     export default {
-        name:'userprofile',
+        name:'user-profile',
         data(){
             return {
                 currentUser: null
