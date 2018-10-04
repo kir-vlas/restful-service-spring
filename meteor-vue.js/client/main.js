@@ -5,14 +5,14 @@ import VuePaginate from 'vue-paginate'
 Vue.use(VueRouter);
 Vue.use(VuePaginate);
 
-import App from '../imports/ui/app.vue';
-import AppHeader from '../imports/ui/appheader';
-import AppFooter from '../imports/ui/appfooter';
-import Article from '../imports/ui/article';
-import Login from '../imports/ui/login';
-import SignUp from '../imports/ui/signup';
-import Edit from '../imports/ui/edit';
-import UserProfile from '../imports/ui/userprofile';
+import App from './imports/ui/app.vue';
+import AppHeader from './imports/ui/appheader';
+import AppFooter from './imports/ui/appfooter';
+import Article from './imports/ui/article';
+import Login from './imports/ui/login';
+import SignUp from './imports/ui/signup';
+import Edit from './imports/ui/edit';
+import UserProfile from './imports/ui/userprofile';
 
 const router = new VueRouter({
     routes:[

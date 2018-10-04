@@ -4,30 +4,21 @@ import {Random} from 'meteor/random'
 
 const articles = new Mongo.Collection('articles');
 
-Meteor.startup(() => {
-
-});
-
 Meteor.methods({
-    loadArticles: function () {
-        const result = articles.find({}).fetch();
-        return result;
-    },
+    loadArticles:  () => articles.find({}).fetch(),
+
+    loadArticleById: (id) => articles.findOne({_id: id}),
+
     loadArticlesForUser: function () {
         const currentUser = Meteor.user();
         if (currentUser) {
-            console.log(currentUser);
             return articles.find({$or: [{isPrivate: false}, {isPrivate: true, "author._id": currentUser._id}]}).fetch();
         }
         else return articles.find({isPrivate: false}).fetch();
     },
-    loadArticleById: function (id) {
-        const result = articles.findOne({_id: id});
-        return result;
-    },
-    createArticle: function (newArticle) {
-        articles.insert(newArticle);
-    },
+
+    createArticle:  (newArticle) => articles.insert(newArticle),
+
     editArticle: function (newArticle) {
         if (Roles.userIsInRole(Meteor.user(), ['admin']) || newArticle.author._id === Meteor.user()._id) {
             articles.update({_id: newArticle._id}, {

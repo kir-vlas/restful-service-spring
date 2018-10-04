@@ -2,8 +2,14 @@
     <div id="body">
         <app-header></app-header>
         <main>
-            <login :par-user="currentUser" @update="afterLogin" v-if="$route.meta.layout === 'login'"></login>
-            <signup :par-user="currentUser" @update="afterLogin" v-if="$route.meta.layout === 'sign-up'"></signup>
+            <login :par-user="currentUser"
+                   @update="afterLogin"
+                   v-if="$route.meta.layout === 'login'">
+            </login>
+            <signup :par-user="currentUser"
+                    @update="afterLogin"
+                    v-if="$route.meta.layout === 'sign-up'">
+            </signup>
             <div class="sub-header">
                 <div class="logged-in" v-if="currentUser">
                     <span>Welcome, <router-link :to="{name:'user', params: {username:currentUser.username} }">{{currentUser.username}}</router-link></span>
@@ -16,32 +22,48 @@
                 </div>
             </div>
             <user-profile v-if="$route.meta.layout === 'userprofile'"></user-profile>
-            <div class="articles-main" v-if="$route.meta.layout === 'main'">
-                <paginate name="articles" :list="articles" :per="5">
+            <div class="articles-main"
+                 v-if="$route.meta.layout === 'main'">
+                <paginate name="articles"
+                          :list="articles"
+                          :per="5">
                     <div v-for="article of paginated('articles')">
-                        <div class="article-card" :title="article.title" v-if="!article.isPrivate">
+                        <div class="article-card"
+                             :title="article.title"
+                             v-if="!article.isPrivate">
                             <div style="display: inline-flex;">
-                                <h2 class="article-header" @click="goTo(article._id)">{{article.title}}</h2>
-                                <div class="edit-buttons" v-if="currentUser">
-                                    <button v-if="currentUser.username === 'admin'" @click="deleteArticle(article)"
+                                <h2 class="article-header"
+                                    @click="goTo(article._id)">{{article.title}}
+                                </h2>
+                                <div class="edit-buttons"
+                                     v-if="currentUser">
+                                    <button v-if="currentUser.username === 'admin'"
+                                            @click="deleteArticle(article)"
                                             class="create-button edit-button"><span
                                             class="edit-button-text">Delete</span>
                                     </button>
-                                    <button v-if="currentUser.username === 'admin'" @click="editArticle(article)"
+                                    <button v-if="currentUser.username === 'admin'"
+                                            @click="editArticle(article)"
                                             class="create-button edit-button"><span class="edit-button-text">Edit</span>
                                     </button>
                                 </div>
                             </div>
                             <h5 class="article-author">Author: {{article.author.username}}</h5>
-                            <span class="article-text">{{article.textBody.substr(0,200)}}</span>
+                            <span class="article-text">{{article.textBody.length > 2500
+                                    ? article.textBody.substr(0, 2500).concat('...')
+                                    : article.textBody}}</span>
                         </div>
                         <div v-else-if="currentUser">
-                            <div class="article-card private-article" :title="article.title" @click="goTo(article._id)"
+                            <div class="article-card private-article"
+                                 :title="article.title"
+                                 @click="goTo(article._id)"
                                  v-if="currentUser.username === article.author.username">
-                                <button v-if="currentUser.username === 'admin'" @click="deleteArticle(article)"
+                                <button v-if="currentUser.username === 'admin'"
+                                        @click="deleteArticle(article)"
                                         class="edit-button">Delete
                                 </button>
-                                <button v-if="currentUser.username === 'admin'" @click="editArticle(article)"
+                                <button v-if="currentUser.username === 'admin'"
+                                        @click="editArticle(article)"
                                         class="edit-button">Edit
                                 </button>
                                 <h2 class="article-header">{{article.title}}</h2>
@@ -59,19 +81,42 @@
                 prev: '« Back '
             }"></paginate-links>
             </div>
-            <edit :art="articles" @update="afterChange" v-if="$route.meta.layout === 'edit'"
-                  class="edit-container"></edit>
-            <post :art="articles" @update="afterChange" v-if="$route.meta.layout === 'article'"></post>
-            <button class="create-button" v-if="currentUser && $route.meta.layout === 'main'" @click="showCreateForm()">
-                <span class="init-text">Create Article</span></button>
+            <edit :art="articles"
+                  @update="afterChange"
+                  v-if="$route.meta.layout === 'edit'"
+                  class="edit-container">
+            </edit>
+            <post :art="articles"
+                  @update="afterChange"
+                  v-if="$route.meta.layout === 'article'">
+            </post>
+            <button class="create-button"
+                    v-if="currentUser
+                    && $route.meta.layout === 'main'"
+                    @click="showCreateForm()">
+                <span class="init-text">Create Article</span>
+            </button>
             <div class="create-form" v-show="createFormVisible">
                 <input type="text" v-model="newArticle.title" placeholder="Title"/>
                 <textarea class="article-text" v-model="newArticle.textBody" placeholder="text"></textarea>
+                <span class="danger"
+                      v-if="errorLabel">
+                        Missing fields or too much letters in article
+                    </span>
                 <span class="create-form-elements">
-                <button class="create-button" @click="createArticle(article)"><span
-                        class="submit-text">Send</span></button>
-                <button class="create-button" @click="showCreateForm"><span class="submit-text">Cancel</span></button>
-                <span><input type="checkbox" title="Private" v-model="newArticle.isPrivate">Private</span>
+                    <button class="create-button"
+                            @click="createArticle(article)">
+                        <span class="submit-text">Send</span></button>
+                    <button class="create-button"
+                            @click="showCreateForm">
+                        <span class="submit-text">Cancel</span>
+                    </button>
+                    <span>
+                        <input type="checkbox"
+                               title="Private"
+                               v-model="newArticle.isPrivate">
+                        Private
+                    </span>
             </span>
             </div>
         </main>
@@ -81,123 +126,130 @@
 
 <script>
 
-    //TODO more fields for users
-    //TODO admin panel with registered users
-    //TODO suspend and ban users
-    //TODO register new administrators
-    //TODO verify e-mail
-    //TODO Sign-Up password validation
-    //TODO articles field validation
-    //TODO attach pictures to articles
-    //TODO comments tree
-    //TODO refactor styles
-    //TODO add ability to change article privacy
+  //TODO more fields for users
+  //TODO admin panel with registered users
+  //TODO suspend and ban users
+  //TODO register new administrators
+  //TODO verify e-mail
+  //TODO Sign-Up password validation
+  //TODO attach pictures to articles
+  //TODO comments tree
 
-    import {Meteor} from 'meteor/meteor';
+  import {Meteor} from 'meteor/meteor';
 
-    import appHeader from './appheader';
-    import appFooter from './appfooter';
+  import appHeader from './appheader';
+  import appFooter from './appfooter';
 
-    export default {
-        name: 'app',
-        components: {
-            appHeader,
-            appFooter,
+  export default {
+    name: 'app',
+    components: {
+      appHeader,
+      appFooter,
+    },
+    data() {
+      return {
+        formVisible: false,
+        createFormVisible: false,
+        errorLabel: false,
+        isLoggedIn: false,
+        articles: [],
+        paginate: ['articles'],
+        newArticle: {
+          title: '',
+          textBody: '',
+          author: '',
+          isPrivate: false,
+          comments: []
         },
-        data() {
-            return {
-                formVisible: false,
-                createFormVisible: false,
-                errorLabel: false,
-                isLoggedIn: false,
-                articles: [],
-                paginate: ['articles'],
-                newArticle: {
-                    title: '',
-                    textBody: '',
-                    author: '',
-                    isPrivate: false,
-                    comments: []
-                },
-                user: {
-                    username: '',
-                    password: ''
-                },
-                currentUser: null
-            }
+        user: {
+          username: '',
+          password: ''
         },
-        created() {
-            Meteor.call("loadArticlesForUser", (error, result) => {
-                if (error)
-                    throw new Meteor.error(error);
+        currentUser: null
+      }
+    },
+    created() {
+      Meteor.call("loadArticlesForUser", (error, result) => {
+        if (error)
+          throw new Meteor.error(error);
 
-                this.articles = result.valueOf();
-            });
-        },
-        mounted() {
-            this.fetchData();
-        },
-        methods: {
-            showCreateForm() {
-                this.createFormVisible = !this.createFormVisible;
-            },
-            debug() {
-                this.newArticle.isPrivate = !this.newArticle.isPrivate;
-            },
-            createArticle() {
-                this.newArticle.author = Meteor.user();
-                Meteor.call("createArticle", this.newArticle);
-                this.fetchData();
-            },
-            editArticle(article) {
-                this.$router.push({name: 'edit', params: {id: article._id}});
-            },
-            deleteArticle(article) {
-                Meteor.call("deleteArticle", article);
-                this.fetchData();
-            },
-            fetchData() {
-                Meteor.call("loadArticlesForUser", (error, result) => {
-                    if (error) throw error;
-                    else {
-                        this.articles = result.valueOf();
-                        this.formVisible = false;
-                        this.errorLabel = false;
-                        this.createFormVisible = false;
-                        this.newArticle = {
-                            title: '',
-                            textBody: '',
-                            author: '',
-                            isPrivate: false,
-                            comments: []
-                        };
-                        this.currentUser = Meteor.user();
-                        console.log(this.currentUser);
-                    }
-                });
-            },
-            login() {
-                this.$router.push('/login');
-            },
-            signup() {
-                this.$router.push('/sign-up');
-            },
-            logout() {
-                Meteor.logout();
-                this.$router.push('/');
-                this.fetchData();
-            },
-            afterLogin(newU) {
-                this.currentUser = newU;
-            },
-            afterChange(newArticleCollection) {
-                this.articles = newArticleCollection;
-            },
-            goTo(id) {
-                this.$router.push({name: 'article', params: {id: id}});
-            }
+        this.articles = result.valueOf();
+      });
+    },
+    mounted() {
+      this.fetchData();
+    },
+    methods: {
+      showCreateForm() {
+        this.errorLabel = false;
+        this.newArticle.title = '';
+        this.newArticle.textBody = '';
+        this.createFormVisible = !this.createFormVisible;
+      },
+      debug() {
+        this.newArticle.isPrivate = !this.newArticle.isPrivate;
+      },
+      createArticle() {
+        if (!this.newArticle.title
+            || !this.newArticle.textBody
+            || (this.newArticle.textBody.length > 15000)) {
+          this.errorLabel = true;
+          return;
         }
+        this.newArticle.author = Meteor.user();
+        Meteor.call("createArticle", this.newArticle);
+        this.fetchData();
+      },
+      editArticle(article) {
+        this.$router.push({name: 'edit', params: {id: article._id}});
+      },
+      deleteArticle(article) {
+        Meteor.call("deleteArticle", article);
+        this.fetchData();
+      },
+      fetchData() {
+        Meteor.call("loadArticlesForUser", (error, result) => {
+          if (error) throw error;
+          else {
+            this.articles = result.valueOf();
+            this.formVisible = false;
+            this.errorLabel = false;
+            this.createFormVisible = false;
+            this.newArticle = {
+              title: '',
+              textBody: '',
+              author: '',
+              isPrivate: false,
+              comments: []
+            };
+            this.currentUser = Meteor.user();
+            console.log(this.currentUser);
+          }
+        });
+      },
+      login() {
+        this.$router.push('/login');
+      },
+      signup() {
+        this.$router.push('/sign-up');
+      },
+      logout() {
+        Meteor.logout();
+        this.$router.push('/');
+        this.fetchData();
+      },
+      afterLogin(newU) {
+        this.currentUser = newU;
+        this.fetchData();
+      },
+      afterChange(newArticleCollection) {
+        this.articles = newArticleCollection;
+      },
+      goTo(id) {
+        this.$router.push({name: 'article', params: {id: id}});
+      }
     }
+  }
 </script>
 
 <style>
@@ -246,9 +298,6 @@
         color: inherit;
     }
 
-    .article-author {
-
-    }
 
     .article-header {
         cursor: pointer;
@@ -259,13 +308,17 @@
         min-height: 300px;
     }
 
+    .danger {
+        color: red;
+    }
+
     .create-form {
         margin-top: 30px;
         width: 800px;
         height: 400px;
         position: fixed;
         padding: 10px;
-        top: 50%;
+        top: 500px;
         left: 50%;
         transform: translate(-50%, -50%);
         background-color: white;
@@ -431,28 +484,6 @@
 
     .header-button-text {
         padding: 5px 10px;
-    }
-
-    .create-button:before {
-        content: "";
-
-        position: absolute;
-        top: 50%;
-        left: 50%;
-
-        display: block;
-        width: 0;
-        padding-top: 0;
-
-        border-radius: 100%;
-
-        background-color: rgba(236, 240, 241, .3);
-
-        -webkit-transform: translate(-50%, -50%);
-        -moz-transform: translate(-50%, -50%);
-        -ms-transform: translate(-50%, -50%);
-        -o-transform: translate(-50%, -50%);
-        transform: translate(-50%, -50%);
     }
 
     .create-button:active:before {
